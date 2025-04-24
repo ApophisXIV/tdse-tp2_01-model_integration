@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.rs": "rust",
+        "main.h": "c",
+        "stm32f1xx_it.h": "c",
+        "stm32f1xx_hal.h": "c",
+        "stm32f1xx_hal_conf.h": "c",
+        "task_sensor_attribute.h": "c"
+    }
+}

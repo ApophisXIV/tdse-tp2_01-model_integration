@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        // --------------------------------------------------------------------------
+        // Configuracion semihosting - printf 
+        // --------------------------------------------------------------------------
+        {
+            "name": "Debug con OpenOCD",
+            "cwd": "${workspaceFolder}",
+            "type": "cortex-debug",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "servertype": "openocd",
+            "serverpath": "/home/guido/st/stm32cubeide_1.18.0/plugins/com.st.stm32cube.ide.mcu.externaltools.openocd.linux64_2.4.100.202501161620/tools/bin/openocd",
+            "configFiles": [
+                "OpenOCD_Debug.cfg"
+            ],
+            "serverArgs": [
+                "-s",
+                "/home/guido/st/stm32cubeide_1.18.0/plugins/com.st.stm32cube.ide.mcu.debug.openocd_2.3.100.202501240831/resources/openocd/st_scripts",
+                // "-d3"
+            ],
+            "device":"STM32F103RBTx",
+            "svdFile": "${config:STM32VSCodeExtension.cubeCLT.path}/STMicroelectronics_CMSIS_SVD/STM32F103.svd",
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "raw",
+            "preLaunchCommands": [
+                "monitor arm semihosting enable",
+                "monitor sleep 100",
+            ]
+        },
+        // --------------------------------------------------------------------------
+        
+
+    ]
+}
