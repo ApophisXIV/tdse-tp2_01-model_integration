@@ -104,7 +104,7 @@ task_system_ev_t get_event_task_system(void)
 }
 
 bool any_event_task_system(void) {
-    return (queue_task_a.head != queue_task_a.tail);
+    return (queue_task_a.head != queue_task_a.tail); // No esta vacia la cola
 }
 
 /********************** end of file ******************************************/
