@@ -82,34 +82,38 @@ extern "C" {
  */
 
 /* Events to excite Task Sensor */
-typedef enum task_sensor_ev {EV_BTN_XX_UP,
-							 EV_BTN_XX_DOWN} task_sensor_ev_t;
+typedef enum task_sensor_ev { EV_BTN_XX_UP,
+                              EV_BTN_XX_DOWN } task_sensor_ev_t;
 
 /* States of Task Sensor */
-typedef enum task_sensor_st {ST_BTN_XX_UP,
-							 ST_BTN_XX_FALLING,
-							 ST_BTN_XX_DOWN,
-						     ST_BTN_XX_RISING} task_sensor_st_t;
+typedef enum task_sensor_st { ST_BTN_XX_UP,
+                              ST_BTN_XX_FALLING,
+                              ST_BTN_XX_DOWN,
+                              ST_BTN_XX_RISING } task_sensor_st_t;
 
 /* Identifier of Task Sensor */
-typedef enum task_sensor_id {ID_BTN_A} task_sensor_id_t;
+typedef enum {
+    ID_BTN_A,
+    ID_BTN_B,
+    ID_BTN_C,
+} task_sensor_id_t;
 
 typedef struct
 {
-	task_sensor_id_t	identifier;
-	GPIO_TypeDef *		gpio_port;
-	uint16_t			pin;
-	GPIO_PinState		pressed;
-	uint32_t			tick_max;
-	task_sensor_ev_t	signal_up;
-	task_sensor_ev_t	signal_down;
+    task_sensor_id_t identifier;
+    GPIO_TypeDef *gpio_port;
+    uint16_t pin;
+    GPIO_PinState pressed;
+    uint32_t tick_max;
+    task_sensor_ev_t signal_up;
+    task_sensor_ev_t signal_down;
 } task_sensor_cfg_t;
 
 typedef struct
 {
-	uint32_t			tick;
-	task_sensor_st_t	state;
-	task_sensor_ev_t	event;
+    uint32_t tick;
+    task_sensor_st_t state;
+    task_sensor_ev_t event;
 } task_sensor_dta_t;
 
 /********************** external data declaration ****************************/

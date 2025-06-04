@@ -10,7 +10,7 @@ En el codigo presentado a continuacion se muestra la implementacion de la maquin
 
 Al finalizar el tiempo de debounce, se emite un evento al sistema para notificar el cambio de estado del sensor.
 
-La comunicacion entre la tarea del sensor y el sistema se realiza a traves de señales definidas en `task_sensor_attribute.h`, las cuales son enviadas al sistema mediante la funcion `put_event_task_system()` que responde a una estructura de cola de eventos (sin prioridad).
+La comunicacion entre la tarea del sensor N y el sistema se realiza a traves de señales definidas en `task_sensor_attribute.h`, las cuales son enviadas al sistema mediante la funcion `put_event_task_system()` que responde a una estructura de cola de eventos (sin prioridad).
 
 ```c
 for (index = 0; SENSOR_DTA_QTY > index; index++) {
@@ -30,7 +30,6 @@ for (index = 0; SENSOR_DTA_QTY > index; index++) {
             p_task_sensor_dta->state = ST_BTN_XX_FALLING;
             p_task_sensor_dta->tick  = p_task_sensor_cfg->tick_max;
         }
-
         break;
 
     case ST_BTN_XX_FALLING:

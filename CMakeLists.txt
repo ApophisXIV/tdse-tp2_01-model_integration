@@ -18,7 +18,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set the project name
-set(CMAKE_PROJECT_NAME tdse-tp2_01-model_integration)
+set(CMAKE_PROJECT_NAME tdse-tp2_02-model_integration)
 
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")

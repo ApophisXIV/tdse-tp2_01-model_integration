@@ -1,4 +1,4 @@
-Example: tdse-tp2_01-model_integration
+Example: tdse-tp2_02-model_integration
 
  Description:
  Bare Metal - Event-Triggered Systems (ETS)
