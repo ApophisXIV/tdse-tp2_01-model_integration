@@ -43,3 +43,15 @@ set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,--start-group -lc -lm -Wl,--en
 set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,--print-memory-usage")
 
 set(CMAKE_CXX_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,--start-group -lstdc++ -lsupc++ -Wl,--end-group")
+# ---------------------------------------------------------------------------- #
+# Configuracion printf en semihosting
+# ---------------------------------------------------------------------------- #
+# Incluimos la biblioteca rdimon que le indica que podemos usar las systemcalls
+# pero estas son manejadas por el debugger controlado por el HOST
+set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -lrdimon")
+set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -specs=rdimon.specs")
+# Excluimos las llamadas del sistema (evitamos redefinir funciones basicas
+# como _write, _read, _open, _kill, _etc) y prevenimos posibles errores de 
+# uso de las syscalls por parte del TARGET
+set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} --specs=nosys.specs")
+# ---------------------------------------------------------------------------- #
