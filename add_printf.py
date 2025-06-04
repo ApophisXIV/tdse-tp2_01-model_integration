@@ -374,7 +374,6 @@ mcu_reference =\n\
 # Si realizaste una instalacion por defecto \n\
 # esta se encuentra habitualmente en:\n\
 # [LINUX]: /opt/st/stm32cubeclt_VERSION/STMicroelectronics_CMSIS_SVD/ACA_VA_EL_NOMBRE_DEL_DEVICE\n\
-# [LINUX_ALTERNATIVA]: /home/TU_USUARIO/st/stm32cubeclt_VERSION/STMicroelectronics_CMSIS_SVD/ACA_VA_EL_NOMBRE_DEL_DEVICE\n\
 # [WIN]: C:\\st\\stm32cubeclt_VERSION/STMicroelectronics_CMSIS_SVD/ACA_VA_EL_NOMBRE_DEL_DEVICE\n\
 mcu_target_svd =\n\
 "
@@ -474,18 +473,22 @@ def get_cubeide_path():
 
     option = wait_for_custom_choice(options_cubeide_message, OPTION_ABORT)
 
+    cube_ide_path = None
+
     if option == OPTION_CUBEIDE_DEFAULT_PATH:
         cube_ide_path = get_lastest_cube_ide_path()
     elif option == OPTION_CUBEIDE_CUSTOM_PATH:
         cube_ide_path = get_user_custom_cubeide_path()
 
-    if cube_ide_path == ERR_PATH_NOT_FOUND and option == OPTION_CUBEIDE_DEFAULT_PATH:
-        print(prRed(">>> [ERROR] ") +
-              " - \tNo se encontro CubeIDE en la ruta predeterminada\n")
-        exit(1)
-    elif cube_ide_path == ERR_CUBE_IDE_NOT_FOUND and option == OPTION_CUBEIDE_CUSTOM_PATH:
-        print(prRed(">>> [ERROR] ") +
-              " - \tNo se encontro CubeIDE en la ruta personalizada\n")
+    if cube_ide_path == None or cube_ide_path == ERR_CUBE_IDE_NOT_FOUND:
+        print(
+            prRed(">>> [ERROR] ") +
+            " - \tNo se encontro CubeIDE en las rutas especificadas\n"
+        )
+        print(
+            prYellow(">>> [INFO]  ")
+            + " -\tPara continuar, por favor, revisa la ruta de instalacion de CubeIDE\n"
+        )
         exit(1)
 
     print(
@@ -636,6 +639,32 @@ def normalize_path(path):
         return normalized_path.replace("\\", "/").replace("//", "/")
 
 
+ERR_PATH_NOT_FOUND = -1
+ERR_CUBE_IDE_NOT_FOUND = -2
+
+
+def find_cube_ide_path(paths_to_find: list):
+    cube_ide_paths = []
+    try:
+        for cube_dir in paths_to_find:
+            for candidate_dir in os.listdir(cube_dir):
+                if "stm32cubeide" in candidate_dir:
+                    cube_ide_paths.append(
+                        normalize_path(cube_dir + "/" + candidate_dir)
+                    )
+    except FileNotFoundError:
+        return ERR_PATH_NOT_FOUND
+
+    if len(cube_ide_paths) == 0:
+        # print(prRed(">>> [ERROR] ") +
+        #       f" - \tNo se encontro CubeIDE en {paths_to_find}")
+        return ERR_CUBE_IDE_NOT_FOUND
+
+    # Ordeno con la mas reciente al principio
+    cube_ide_paths.sort(reverse=True)
+    return cube_ide_paths[0]
+
+
 def get_lastest_cube_ide_path() -> str:
 
     # Buscamos si existe CubeIDE en alguna de estas rutas:
@@ -657,38 +686,6 @@ def get_lastest_cube_ide_path() -> str:
         CUBE_IDE_DIRS = ["C:\\st"]
 
     return find_cube_ide_path(CUBE_IDE_DIRS)
-
-
-ERR_PATH_NOT_FOUND = -1
-ERR_CUBE_IDE_NOT_FOUND = -2
-
-
-def find_cube_ide_path(paths_to_find: list):
-    cube_ide_paths = []
-    for cube_dir in paths_to_find:
-        try:
-            for candidate_dir in os.listdir(cube_dir):
-                if "stm32cubeide" in candidate_dir:
-                    cube_ide_paths.append(
-                        normalize_path(cube_dir + "/" + candidate_dir)
-                    )
-        except FileNotFoundError:
-            # No se encontro en la ruta candidate_dir, buscando en la siguiente
-            print(
-                prRed(">>> [ERROR] ") +
-                f" - \tNo se encontro la ruta {cube_dir}\n"
-                + prYellow(">>> [INFO]  ") +
-                " - \tBuscando en la siguiente ruta...\n"
-            )
-
-    if len(cube_ide_paths) == 0:
-        # print(prRed(">>> [ERROR] ") +
-        #       f" - \tNo se encontro CubeIDE en {paths_to_find}")
-        return ERR_CUBE_IDE_NOT_FOUND
-
-    # Ordeno con la mas reciente al principio
-    cube_ide_paths.sort(reverse=True)
-    return cube_ide_paths[0]
 
 
 def get_openocd(cubeide_path):
@@ -727,6 +724,24 @@ def get_openocd(cubeide_path):
         "scripts_path": normalize_path(openocd_scripts_path[0]),
     }
 
+
+def get_gdb(cubeide_path):
+    plugins_paths = os.listdir(cubeide_path + "/plugins")
+    gdb_path = []
+
+    gdb_name = f"{'arm-none-eabi-gdb.exe' if os.name == 'nt' else 'arm-none-eabi-gdb'}"
+    template_gdb_path = "{cubeide}/plugins/{latest_gdb}/tools/bin/" + gdb_name
+
+    for plugin_path in plugins_paths:
+        if "mcu.externaltools.gnu-tools-for-stm32" in plugin_path and ".jar" not in plugin_path:
+            gdb_path.append(
+                template_gdb_path.format(
+                    cubeide=cubeide_path, latest_gdb=plugin_path
+                )
+            )
+
+    gdb_path.sort(reverse=True)
+    return normalize_path(gdb_path[0])
 
 # -------------------------------- Target info ------------------------------- #
 
@@ -934,6 +949,51 @@ def is_in_range_target_db(number: str, target_db):
     return True
 
 
+# ------------------------------ GDB path config ----------------------------- #
+PATH_SETTINGS_JSON = ".vscode/settings.json"
+
+
+def set_gdb_path(gdb_path):
+    """Add or update cortex-debug.gdbPath in settings.json (no external dependencies)"""
+
+    # Check if settings.json exists
+    if not os.path.exists(PATH_SETTINGS_JSON):
+        with open(PATH_SETTINGS_JSON, "w") as f:
+            f.write("{\n")
+            f.write(f'    "cortex-debug.gdbPath": "{gdb_path}"\n')
+            f.write("}\n")
+
+        print(prGreen(">>> [ADD]   ") +
+              " - settings.json created and gdbPath set")
+        return
+
+    # Load content
+    with open(PATH_SETTINGS_JSON, "r") as f:
+        content = f.readlines()
+
+    # Check if gdbPath is already defined
+    found = False
+    for i, line in enumerate(content):
+        if '"cortex-debug.gdbPath"' in line:
+            content[i] = f'    "cortex-debug.gdbPath": "{gdb_path}",\n'
+            found = True
+            break
+
+    if not found:
+        # Insert before last closing brace
+        if len(content) > 0 and content[-1].strip() == "}":
+            content.insert(-1, f'    "cortex-debug.gdbPath": "{gdb_path}",\n')
+        else:
+            content.append(f'    "cortex-debug.gdbPath": "{gdb_path}"\n')
+
+    # Write back
+    with open(PATH_SETTINGS_JSON, "w") as f:
+        f.writelines(content)
+
+    print(prGreen(">>> [ADD]   ") +
+          " - cortex-debug.gdbPath set in settings.json")
+
+
 if __name__ == "__main__":
 
     if (not is_script_first_run()):
@@ -953,12 +1013,11 @@ if __name__ == "__main__":
     openocd_config = get_openocd_server_config()
     print(H_LINE)
 
-
     remove_syscall_link()
     print(prRed(">>> [REMOVE]") +
           " - Se elimina de la lista de compilacion y linking syscalls.c")
 
-    # add_linking_options(GCC_ARM_NONE_EABI_LINKER_OPTIONS)
+    add_linking_options(GCC_ARM_NONE_EABI_LINKER_OPTIONS)
     print(prGreen(">>> [ADD]   ") +
           " - Se agregan flags de linking para rdimon")
     print(prGreen(">>> [ADD]   ") +
@@ -977,6 +1036,12 @@ if __name__ == "__main__":
     print(prGreen(">>> [ADD]   ") + " - Se configura el servidor de OpenOCD")
     print(prGreen(">>> [ADD]   ") +
           " - Se configura monitor en modo semihosting")
+
+    arm_gdb = get_gdb(cubeide_path)
+    set_gdb_path(arm_gdb)
+    print(prGreen(">>> [ADD]   ") +
+          " - Se configura el path del GDB en settings.json")
+    print(H_LINE)
 
 
 # PATH_SETTINGS_JSON = ".vscode/settings.json"  # Opcional si tiene instalada la extension "Task Buttons"
