@@ -53,11 +53,12 @@ extern "C" {
 /*!< TRCENA: Enable trace and debug block DEMCR (Debug Exception and Monitor Control Register) */
 /*!< DWT Cycle Counter register */
 /*!< CYCCNTENA bit in DWT_CONTROL register */
-#define cycle_counter_init() ({\
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;	/* enable DWT hardware */\
-	DWT->CYCCNT = 0;								/* reset cycle counter */\
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;			/* start counting */\
- 	})
+#define cycle_counter_init()                                                      \
+    do {                                                                          \
+        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; /* enable DWT hardware */ \
+        DWT->CYCCNT = 0;                                /* reset cycle counter */ \
+        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            /* start counting */      \
+    } while (0)
 
 /* reset cycle counter */
 /*!< DWT Cycle Counter register */
@@ -73,8 +74,8 @@ extern "C" {
 
 /* read cycle counter */
 /*!< DWT Cycle Counter register */
-#define cycle_counter_get() (DWT->CYCCNT)
-#define cycles_per_us (SystemCoreClock / 1000000)
+#define cycle_counter_get()     (DWT->CYCCNT)
+#define cycles_per_us           (SystemCoreClock / 1000000)
 #define cycle_counter_time_us() (DWT->CYCCNT / cycles_per_us)
 
 /*  uint32_t cycle_counter = 0;
